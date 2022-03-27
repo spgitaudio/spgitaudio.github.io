@@ -140,7 +140,8 @@ if (navigator.mediaDevices.getUserMedia(constraints)) {
 
       audio.controls = true;
       //const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
-	  const blob = new Blob(chunks, { 'type' : 'audio/wav; codecs=pcm' });		// not sure if this works or is supported
+	  //const blob = new Blob(chunks, { 'type' : 'audio/wav; codecs=pcm' });		// not sure this worked; filename was .wav, but not a valid wav file
+	  const blob = new Blob(chunks, { 'type' : 'audio/webm; codecs=pcm' });		// not sure this worked; filename was .wav, but not a valid wav file	  
       chunks = [];
       const audioURL = window.URL.createObjectURL(blob);
       audio.src = audioURL;
