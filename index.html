@@ -15,14 +15,28 @@
           </header>
 
           <section class="main-controls">
+              <header>
+                  <h2>Far side</h2>
+              </header>
+              <div>
+                  <select id="far-filename-dropdown" name="far-filename-dropdown">
+                  </select>
+              </div>
               <div id="downlink-buttons">
                   <button class="load">Load</button>
                   <button class="play">Play</button>
+                  <button class="stop-far">Stop</button>
+                  <div id="loaded_file">Loaded: press load to get file</div>
               </div>
+
+              <header>
+                  <h2>Near side</h2>
+              </header>
               <canvas class="visualizer" height="60px"></canvas>
               <div id="buttons">
                   <button class="record">Record</button>
                   <button class="stop">Stop</button>
+                  <button class="record_and_play">Record + Play</button>
               </div>
           </section>
 
@@ -40,9 +54,8 @@
       <aside>
           <h2>Information</h2>
 
-          <p>SMPL HearSay is built using <a href="https://developer.mozilla.org/en-US/docs/Web/API/Navigator.getUserMedia">getUserMedia</a> and the <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder_API">MediaRecorder API</a>, which provides an easier way to capture Media streams.</p>
+          <p>SMPL HearSay can record the microphone while playing a simulated farend talker over the loudspeaker </p>
 
-          <p>Icon courtesy of <a href="http://findicons.com/search/microphone">Find Icons</a>. Thanks to <a href="http://soledadpenades.com/">Sole</a> for the Oscilloscope code!</p>
       </aside>
       <script src="recorder.js"></script>
       <script src="app.js"></script>

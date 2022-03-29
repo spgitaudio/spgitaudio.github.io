@@ -1,34 +1,122 @@
 // set up basic variables for app
 // set up for downlink playback (fetch/load wav file from webserver, play locally over loudspeaker)
-const load = document.querySelector('.load');
-const play = document.querySelector('.play');
+
+let dropdown = document.getElementById('far-filename-dropdown');
+dropdown.length = 0;
+
+let defaultOption = document.createElement('option');
+defaultOption.text = 'Choose a wav';
+
+dropdown.add(defaultOption);
+dropdown.selectedIndex = 0;
+
+//const url = 'https://api.myjson.com/bins/7xq2x';
+//const url = 'provinces.json';
+const url = 'list_of_wav_filenames.json';
+
+// use fetch to retrieve the list of wav filenames and then populate the dropdown list
+// report any errors that occur in the fetch operation
+// 
+fetch(url)
+	.then(
+		function (response) {
+			if (response.status !== 200) {
+				console.warn('Looks like there was a problem. Status Code: ' + response.status);
+				return;
+			}
+
+			// Examine the text in the response and populate the dropdown with the filenames
+			response.json().then(function (data) {
+				let option;
+
+				for (let i = 0; i < data.length; i++) {
+					option = document.createElement('option');
+					option.text = data[i].name;
+					option.value = data[i].name;
+					dropdown.add(option);
+				}
+			});
+		}
+	)
+	.catch(function (err) {
+		console.error('Fetch Error -', err);
+	});
+
+
+const loadButton = document.querySelector('.load');
+const playButton = document.querySelector('.play');
+const stopfarButton = document.querySelector('.stop-far');
 const audioCtxDownlink = new AudioContext();
 let buffer = null;
 
-load.onclick = function() {
-  const request = new XMLHttpRequest();
-  request.open("GET", "fb_fc.wav");
-  request.responseType = "arraybuffer";
-  request.onload = function() {
-    let undecodedAudio = request.response;
-    audioCtxDownlink.decodeAudioData(undecodedAudio, (data) => buffer = data);
-  };
-  request.send();
-}
-	
+//add events to the buttons
+loadButton.addEventListener("click", loadFarFile);
+playButton.addEventListener("click", playFarFile);
+stopfarButton.addEventListener("click", stopFarFile);
 
-play.onclick = function() {
-  const source = audioCtxDownlink.createBufferSource();
-  source.buffer = buffer;
-  source.connect(audioCtxDownlink.destination);
-  source.start();
-};
+let farFilename = ''
+
+/*
+  Disable the play and stopfar buttons until we successfully fetch the selected file 
+*/
+loadButton.disabled = false;
+playButton.disabled = true;
+stopfarButton.disabled = true;
+
+function loadFarFile() {
+	console.log("loadButton clicked");
+	farFilename = dropdown.options[dropdown.selectedIndex].value;
+	console.log("selected " + farFilename);
+
+	fetch(farFilename)
+		.then(function (response) {
+			if (response.status !== 200) {
+				console.warn('loadFarFile has a problem. Status Code: ' + response.status);
+				console.warn('loadFarFile could not load ', farFilename);
+				return;
+			}
+			return response.arrayBuffer()
+		}).
+		then(function (arrayBuffer) {
+			if (arrayBuffer) {
+				let undecodedAudio = arrayBuffer;
+				audioCtxDownlink.decodeAudioData(undecodedAudio, (data) => buffer = data);
+
+				// update the displayed loaded file
+				document.getElementById("loaded_file").innerHTML = "Loaded: " + farFilename
+
+				// enable the buttons now that we have successfully downloaded a file
+				playButton.disabled = false;
+				stopfarButton.disabled = false;
+			}
+		})
+		.catch(function (err) {
+			console.error('loadFarFile Error - ', err);
+		});
+}
+
+var source = null;
+
+function playFarFile() {
+	console.log("playButton clicked");
+	source = audioCtxDownlink.createBufferSource();
+	source.buffer = buffer;
+	source.connect(audioCtxDownlink.destination);
+	source.start();
+}
+
+
+function stopFarFile() {
+	console.log("stopfarButton clicked");
+	source.stop();
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // set up for local recording
 const recordButton = document.querySelector('.record');
 const stopButton = document.querySelector('.stop');
+const recordAndPlayButton = document.querySelector('.record_and_play');
 const soundClips = document.querySelector('.sound-clips');
 const canvas = document.querySelector('.visualizer');
 const mainSection = document.querySelector('.main-controls');
@@ -52,9 +140,10 @@ var audioContext //audio context to help us record
 //var stopButton = document.getElementById("stopButton");
 //var pauseButton = document.getElementById("pauseButton");
 
-//add events to those 2 buttons
+//add events to the near side buttons
 recordButton.addEventListener("click", startRecording);
 stopButton.addEventListener("click", stopRecording);
+recordAndPlayButton.addEventListener("click", startRecordingAndPlay);
 //pauseButton.addEventListener("click", pauseRecording);
 
 function startRecording() {
@@ -65,11 +154,22 @@ function startRecording() {
 		https://addpipe.com/blog/audio-constraints-getusermedia/
 	*/
 
-	var constraints = { audio: true, video: false }
+	//var constraints = { audio: true, video: false }
+	var constraints = {
+		audio: {
+			sampleRate: 48000,
+			channelCount: 2,
+			volume: 1.0,
+			echoCancellation: false,
+			noiseSuppression: false,
+			autoGainControl: false
+		},
+		video: false
+	}
 
 	/*
 	  Disable the record button until we get a success or fail from getUserMedia() 
-  */
+	*/
 
 	recordButton.disabled = true;
 	stopButton.disabled = false;
@@ -119,6 +219,18 @@ function startRecording() {
 		stopButton.disabled = true;
 		//pauseButton.disabled = true
 	});
+}
+
+function startRecordingAndPlay() {
+	console.log("recordAndPlayButton clicked");
+	startRecording();
+
+	source = audioCtxDownlink.createBufferSource();
+	source.buffer = buffer;
+	source.connect(audioCtxDownlink.destination);
+	// Start playback 1 second after the current time so that we're confident that recording has started
+	// and reduces the chance that we miss the first portion of the far file
+	source.start(audioCtxDownlink.currentTime + 1.0);
 }
 
 function pauseRecording() {
@@ -172,14 +284,19 @@ function createDownloadLink(blob) {
 
 	//save to disk link
 	link.href = url;
-	link.download = filename + ".wav"; //download forces the browser to donwload the file using the  filename
+	//link.download = filename + ".wav"; //download forces the browser to donwload the file using the  filename
+
+	// append the name of the file that was played over the loudspeaker so that we can easily pair with the reference
+	recordedFilename = filename + "." + farFilename.substr(0, farFilename.lastIndexOf(".")) + ".wav";
+	link.download = recordedFilename; //download forces the browser to donwload the file using the recordedFilename
 	link.innerHTML = "Save to disk";
 
 	//add the new audio element to li
 	li.appendChild(au);
 
 	//add the filename to the li
-	li.appendChild(document.createTextNode(filename + ".wav "))
+	//li.appendChild(document.createTextNode(filename + ".wav "))
+	li.appendChild(document.createTextNode(recordedFilename))
 
 	//add the save to disk link to li
 	li.appendChild(link);
