@@ -1,17 +1,16 @@
 // set up basic variables for app
 // set up for downlink playback (fetch/load wav file from webserver, play locally over loudspeaker)
 
-let dropdown = document.getElementById('far-filename-dropdown');
-dropdown.length = 0;
+let dropdownFar = document.getElementById('far-filename-dropdown');
+dropdownFar.length = 0;
 
 let defaultOption = document.createElement('option');
 defaultOption.text = 'Choose a wav';
 
-dropdown.add(defaultOption);
-dropdown.selectedIndex = 0;
+dropdownFar.add(defaultOption);
+dropdownFar.selectedIndex = 0;
 
-//const url = 'https://api.myjson.com/bins/7xq2x';
-//const url = 'provinces.json';
+// filename (on the server) that lists all the available wav files to be downloaded and played on the laptop/desktop/cellphone
 const url = 'list_of_wav_filenames.json';
 
 // use fetch to retrieve the list of wav filenames and then populate the dropdown list
@@ -33,7 +32,7 @@ fetch(url)
 					option = document.createElement('option');
 					option.text = data[i].name;
 					option.value = data[i].name;
-					dropdown.add(option);
+					dropdownFar.add(option);
 				}
 			});
 		}
@@ -43,29 +42,29 @@ fetch(url)
 	});
 
 
-const loadButton = document.querySelector('.load');
-const playButton = document.querySelector('.play');
-const stopfarButton = document.querySelector('.stop-far');
+const loadFarButton = document.querySelector('.load');
+const playFarButton = document.querySelector('.play');
+const stopFarButton = document.querySelector('.stop-far');
 const audioCtxDownlink = new AudioContext();
 let buffer = null;
 
 //add events to the buttons
-loadButton.addEventListener("click", loadFarFile);
-playButton.addEventListener("click", playFarFile);
-stopfarButton.addEventListener("click", stopFarFile);
+loadFarButton.addEventListener("click", loadFarFile);
+playFarButton.addEventListener("click", playFarFile);
+stopFarButton.addEventListener("click", stopFarFile);
 
 let farFilename = ''
 
 /*
   Disable the play and stopfar buttons until we successfully fetch the selected file 
 */
-loadButton.disabled = false;
-playButton.disabled = true;
-stopfarButton.disabled = true;
+loadFarButton.disabled = false;
+playFarButton.disabled = true;
+stopFarButton.disabled = true;
 
 function loadFarFile() {
-	console.log("loadButton clicked");
-	farFilename = dropdown.options[dropdown.selectedIndex].value;
+	console.log("loadFarButton clicked");
+	farFilename = dropdownFar.options[dropdownFar.selectedIndex].value;
 	console.log("selected " + farFilename);
 
 	fetch(farFilename)
@@ -86,8 +85,8 @@ function loadFarFile() {
 				document.getElementById("loaded_file").innerHTML = "Loaded: " + farFilename
 
 				// enable the buttons now that we have successfully downloaded a file
-				playButton.disabled = false;
-				stopfarButton.disabled = false;
+				playFarButton.disabled = false;
+				stopFarButton.disabled = false;
 			}
 		})
 		.catch(function (err) {
@@ -95,25 +94,25 @@ function loadFarFile() {
 		});
 }
 
-var source = null;
+var sourceFar = null;
 const playFarAudio = document.getElementById('farAudioFile');
 var dest = audioCtxDownlink.createMediaStreamDestination();
 
 function playFarFile() {
-	console.log("playButton clicked");
-	source = audioCtxDownlink.createBufferSource();
-	source.buffer = buffer;
-	//source.connect(audioCtxDownlink.destination);
-	source.connect(dest);
-	source.start();
+	console.log("playFarButton clicked");
+	sourceFar = audioCtxDownlink.createBufferSource();
+	sourceFar.buffer = buffer;
+	//sourceFar.connect(audioCtxDownlink.destination);
+	sourceFar.connect(dest);
+	sourceFar.start();
 	playFarAudio.srcObject = dest.stream;
 	playFarAudio.play();
 }
 
 
 function stopFarFile() {
-	console.log("stopfarButton clicked");
-	source.stop();
+	console.log("stopFarButton clicked");
+	sourceFar.stop();
 }
 
 
@@ -230,15 +229,15 @@ function startRecordingAndPlay() {
 	console.log("recordAndPlayButton clicked");
 	startRecording();
 
-	source = audioCtxDownlink.createBufferSource();
-	source.buffer = buffer;
+	sourceFar = audioCtxDownlink.createBufferSource();
+	sourceFar.buffer = buffer;
 	//source.connect(audioCtxDownlink.destination);
-	source.connect(dest);
+	sourceFar.connect(dest);
 	playFarAudio.srcObject = dest.stream;
 	playFarAudio.play();
 	// Start playback 1 second after the current time so that we're confident that recording has started
 	// and reduces the chance that we miss the first portion of the far file
-	source.start(audioCtxDownlink.currentTime + 1.0);
+	sourceFar.start(audioCtxDownlink.currentTime + 1.0);
 }
 
 function pauseRecording() {
@@ -344,6 +343,12 @@ function createDownloadLink(blob) {
 }
 
 //////////////////////////////////////////////////////////////////////////
+// code to select the output device(s) that play the far file and also near file
+// NOTE that a cellphone likely only has a single output device (single D/A converter)
+// and likely will not offer anything that can be selected. Even though cellphones
+// can play over their built-in loudspeaker(s) OR headphones, they typically cannot
+// simultaneously play over both (and even less likely play different files over both)
+
 'use strict';
 
 const gumAudio = document.querySelector('audio.gum');
@@ -443,6 +448,7 @@ function handleError(error) {
 
 
 //////////////////////////////////////////////////////////////////////////
+// code for visualizing the near side captured mic signal
 
 function visualize(stream) {
   if(!audioContext) {
