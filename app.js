@@ -96,13 +96,18 @@ function loadFarFile() {
 }
 
 var source = null;
+const playFarAudio = document.getElementById('farAudioFile');
+var dest = audioCtxDownlink.createMediaStreamDestination();
 
 function playFarFile() {
 	console.log("playButton clicked");
 	source = audioCtxDownlink.createBufferSource();
 	source.buffer = buffer;
-	source.connect(audioCtxDownlink.destination);
+	//source.connect(audioCtxDownlink.destination);
+	source.connect(dest);
 	source.start();
+	playFarAudio.srcObject = dest.stream;
+	playFarAudio.play();
 }
 
 
@@ -227,7 +232,10 @@ function startRecordingAndPlay() {
 
 	source = audioCtxDownlink.createBufferSource();
 	source.buffer = buffer;
-	source.connect(audioCtxDownlink.destination);
+	//source.connect(audioCtxDownlink.destination);
+	source.connect(dest);
+	playFarAudio.srcObject = dest.stream;
+	playFarAudio.play();
 	// Start playback 1 second after the current time so that we're confident that recording has started
 	// and reduces the chance that we miss the first portion of the far file
 	source.start(audioCtxDownlink.currentTime + 1.0);
@@ -336,141 +344,105 @@ function createDownloadLink(blob) {
 }
 
 //////////////////////////////////////////////////////////////////////////
+'use strict';
 
-//// true on chrome, false on firefox
-////console.log("audio/webm:"+MediaRecorder.isTypeSupported('audio/webm;codecs=opus'));
-//console.log("audio/webm:"+MediaRecorder.isTypeSupported('audio/webm;codecs=pcm'));
-//// false on chrome, true on firefox
-////console.log("audio/ogg:"+MediaRecorder.isTypeSupported('audio/ogg;codecs=opus'));
-//console.log("audio/ogg:"+MediaRecorder.isTypeSupported('audio/ogg;codecs=pcm'));
+const gumAudio = document.querySelector('audio.gum');
+//gumAudio.addEventListener('play', () => {
+//	gumAudio.volume = 0.1;
+//	console.log('Audio lowered to reduce feedback from local gUM stream');
+//});
+//const gumVideo = document.querySelector('video.gum');
+//gumVideo.addEventListener('play', () => {
+//	gumVideo.volume = 0.1;
+//	console.log('Audio lowered to reduce feedback from local gUM stream');
+//});
 
-////if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')){
-//if (MediaRecorder.isTypeSupported('audio/webm;codecs=pcm')){
-//	extension="webm";
-//}else{
-//	extension="ogg"
-//}
+function gotDevices(deviceInfos) {
+	const masterOutputSelector = document.createElement('select');
 
-//var constraints = {
-//    audio: {
-//        sampleRate: 48000,
-//        channelCount: 1,
-//        volume: 1.0,
-//		echoCancellation: false,
-//		noiseSuppression: false,
-//		autoGainControl: false,
-//    }
-//}
+	for (let i = 0; i !== deviceInfos.length; ++i) {
+		const deviceInfo = deviceInfos[i];
+		const option = document.createElement('option');
+		option.value = deviceInfo.deviceId;
+		if (deviceInfo.kind === 'audiooutput') {
+			console.info('Found audio output device: ', deviceInfo.label);
+			option.text = deviceInfo.label || `speaker ${masterOutputSelector.length + 1}`;
+			masterOutputSelector.appendChild(option);
+		} else {
+			console.log('Found non audio output device: ', deviceInfo.label);
+		}
+	}
 
-////if (navigator.mediaDevices.getUserMedia) {
-//if (navigator.mediaDevices.getUserMedia(constraints)) {
-//  console.log('getUserMedia supported.');
+	// Clone the master outputSelector and replace outputSelector placeholders.
+	//const allOutputSelectors = document.querySelectorAll('select');
+	const allOutputSelectors = document.querySelectorAll('div.outputSelector select');
+	for (let selector = 0; selector < allOutputSelectors.length; selector++) {
+		const newOutputSelector = masterOutputSelector.cloneNode(true);
+		newOutputSelector.addEventListener('change', changeAudioDestination);
+		allOutputSelectors[selector].parentNode.replaceChild(newOutputSelector, allOutputSelectors[selector]);
+	}
+}
 
-//  //const constraints = { audio: true };
-//  var options = {
-//	  //mimeType : 'audio/'+extension+';codecs=opus'
-//	  //mimeType : 'audio/webm'+';codecs=pcm'
-//	  mimeType : 'audio/webm;codecs=pcm'
-//	  }
-		
-//  let chunks = [];
+navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(handleError);
 
-//  let onSuccess = function(stream) {
+// Attach audio output device to the provided media element using the deviceId.
+function attachSinkId(element, sinkId, outputSelector) {
+	if (typeof element.sinkId !== 'undefined') {
+		element.setSinkId(sinkId)
+			.then(() => {
+				console.log(`Success, audio output device attached: ${sinkId} to element with ${element.title} as source.`);
+			})
+			.catch(error => {
+				let errorMessage = error;
+				if (error.name === 'SecurityError') {
+					errorMessage = `You need to use HTTPS for selecting audio output device: ${error}`;
+				}
+				console.error(errorMessage);
+				// Jump back to first output device in the list as it's the default.
+				outputSelector.selectedIndex = 0;
+			});
+	} else {
+		console.warn('Browser does not support output device selection.');
+	}
+}
+
+function changeAudioDestination(event) {
+	const deviceId = event.target.value;
+	const outputSelector = event.target;
+	// FIXME: Make the media element lookup dynamic.
+	const element = event.path[2].childNodes[1];
+	attachSinkId(element, deviceId, outputSelector);
+}
+
+function gotStream(stream) {
+	window.stream = stream; // make stream available to console
+	//window.stream = audioCtxDownlink.stream		// @todo shree, absolutely NO idea if this is a reasonable (or meaningless) hack
+	gumAudio.srcObject = stream;
+	//gumVideo.srcObject = stream;
+}
+
+function start() {
+	// window.stream = audioCtxDownlink.stream		// @todo shree, absolutely NO idea if this is a reasonable (or meaningless) hack
+	if (window.stream) {
+		window.stream.getTracks().forEach(track => {
+			track.stop();
+		});
+	}
+	const constraints = {
+		audio: true,
+		video: false
+	};
+	navigator.mediaDevices.getUserMedia(constraints).then(gotStream).catch(handleError);
+}
+
+start();
+
+function handleError(error) {
+	console.log('navigator.MediaDevices.getUserMedia error: ', error.message, error.name);
+}
 
 
-//    //const mediaRecorder = new MediaRecorder(stream);
-//	const mediaRecorder = new MediaRecorder(stream, options);
-//	console.log("mediaRecoder.mimeType:" + mediaRecorder.mimeType);
-	
-//    visualize(stream);
-
-//    record.onclick = function() {
-//      mediaRecorder.start();
-//      console.log(mediaRecorder.state);
-//      console.log("recorder started");
-//      record.style.background = "red";
-
-//      stop.disabled = false;
-//      record.disabled = true;
-//    }
-
-//    stop.onclick = function() {
-//      mediaRecorder.stop();
-//      console.log(mediaRecorder.state);
-//      console.log("recorder stopped");
-//      record.style.background = "";
-//      record.style.color = "";
-//      // mediaRecorder.requestData();
-
-//      stop.disabled = true;
-//      record.disabled = false;
-//    }
-
-//    mediaRecorder.onstop = function(e) {
-//      console.log("data available after MediaRecorder.stop() called.");
-
-//      const clipName = prompt('Enter a name for your sound clip?','My unnamed clip');
-
-//      const clipContainer = document.createElement('article');
-//      const clipLabel = document.createElement('p');
-//      const audio = document.createElement('audio');
-//      const deleteButton = document.createElement('button');
-
-//      clipContainer.classList.add('clip');
-//      audio.setAttribute('controls', '');
-//      deleteButton.textContent = 'Delete';
-//      deleteButton.className = 'delete';
-
-//      if(clipName === null) {
-//        clipLabel.textContent = 'My unnamed clip';
-//      } else {
-//        clipLabel.textContent = clipName;
-//      }
-
-//      clipContainer.appendChild(audio);
-//      clipContainer.appendChild(clipLabel);
-//      clipContainer.appendChild(deleteButton);
-//      soundClips.appendChild(clipContainer);
-
-//      audio.controls = true;
-//      //const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
-//	  //const blob = new Blob(chunks, { 'type' : 'audio/wav; codecs=pcm' });		// not sure this worked; filename was .wav, but not a valid wav file
-//	  const blob = new Blob(chunks, { 'type' : 'audio/webm; codecs=pcm' });		// not sure this worked; filename was .wav, but not a valid wav file	  
-//      chunks = [];
-//      const audioURL = window.URL.createObjectURL(blob);
-//      audio.src = audioURL;
-//      console.log("recorder stopped");
-
-//      deleteButton.onclick = function(e) {
-//        let evtTgt = e.target;
-//        evtTgt.parentNode.parentNode.removeChild(evtTgt.parentNode);
-//      }
-
-//      clipLabel.onclick = function() {
-//        const existingName = clipLabel.textContent;
-//        const newClipName = prompt('Enter a new name for your sound clip?');
-//        if(newClipName === null) {
-//          clipLabel.textContent = existingName;
-//        } else {
-//          clipLabel.textContent = newClipName;
-//        }
-//      }
-//    }
-
-//    mediaRecorder.ondataavailable = function(e) {
-//      chunks.push(e.data);
-//    }
-//  }
-
-//  let onError = function(err) {
-//    console.log('The following error occured: ' + err);
-//  }
-
-//  navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
-
-//} else {
-//   console.log('getUserMedia not supported on your browser!');
-//}
+//////////////////////////////////////////////////////////////////////////
 
 function visualize(stream) {
   if(!audioContext) {

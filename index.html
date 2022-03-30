@@ -27,6 +27,27 @@
                   <button class="play">Play</button>
                   <button class="stop-far">Stop</button>
                   <div id="loaded_file">Loaded: press load to get file</div>
+
+                  <!--
+                  <div>
+                      <div class="outputSelector">
+                          <select></select>
+                      </div>
+                  </div>
+                  -->
+                  <p>play back Far audio using:</p>
+                  <div>
+                      <audio id="farAudioFile" title="farAudioFile" >
+                          <!--
+                          <source src="fb_fc.wav" type="audio/wav" />
+                          This browser does not support the audio element.
+                          -->
+                      </audio>
+                      <div class="outputSelector">
+                          <select></select>
+                      </div>
+                  </div>
+
               </div>
 
               <header>
@@ -46,6 +67,18 @@
               <ol id="recordingsList"></ol>
           </section>
 
+          <div>
+              <h2>Local media files:</h2>
+              <div>
+                  <audio title="local audio file" controls loop>
+                      <source src="fb_fc.wav" type="audio/wav" />
+                      This browser does not support the audio element.
+                  </audio>
+                  <div class="outputSelector">
+                      <select></select>
+                  </div>
+              </div>
+          </div>
 
       </div>
 
