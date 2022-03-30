@@ -3,9 +3,24 @@
         "name": "american_48.wav"
     },
     {
+        "name": "german_48.wav"
+    },
+    {
         "name": "fb_fc.wav"
     },
     {
+        "name": "mc_mb.wav"
+    },
+    {
         "name": "md_mf.wav"
+    },
+    {
+        "name": "fe_fe.wav"
+    },
+    {
+        "name": "mandarin_48.wav"
+    },
+    {
+        "name": "american_2_48.wav"
     }
 ]

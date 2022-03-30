@@ -70,12 +70,24 @@
           <div>
               <h2>Local media files:</h2>
               <div>
-                  <audio title="local audio file" controls loop>
-                      <source src="fb_fc.wav" type="audio/wav" />
-                      This browser does not support the audio element.
-                  </audio>
-                  <div class="outputSelector">
-                      <select></select>
+                  <div>
+                      <select id="near-filename-dropdown" name="near-filename-dropdown">
+                      </select>
+                  </div>
+                  <div id="near-buttons">
+                      <button class="load-near">Load</button>
+                      <button class="play-near">Play</button>
+                      <button class="stop-near">Stop</button>
+                      <div id="loaded_file_near">Loaded: press load to get file</div>
+
+                      <p>play back Near audio using:</p>
+                      <div>
+                          <audio id="nearAudioFile" title="nearAudioFile">
+                          </audio>
+                          <div class="outputSelector">
+                              <select></select>
+                          </div>
+                      </div>
                   </div>
               </div>
           </div>
@@ -88,6 +100,11 @@
           <h2>Information</h2>
 
           <p>SMPL HearSay can record the microphone while playing a simulated farend talker over the loudspeaker </p>
+          <p>The recordings can be saved locally and then "shared" (eg by emailing the saved .wav file)</p>
+          <p>Currently the recordings cannot be uploaded to a server (yet...)</p>
+          <p>Some devices such as desktops and laptops have 2 or more output devices (eg built-in loudspeakers AND headphone outputs) </p>
+          <p>On these multi-output devices, a simulated local talker can also be played (eg by connecting the headphone output to a separate external loudspeaker or artificial mouth)</p>
+          <p>Unfortunately, even though many cellphones have built-in loudspeakers and headphone outputs, they typically have only a single D/A converter and cannot play different files over separate outputs</p>
 
       </aside>
       <script src="recorder.js"></script>
