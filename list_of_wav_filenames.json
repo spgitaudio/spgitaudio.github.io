@@ -24,12 +24,12 @@
         "name": "american_2_48.wav"
     },
     {
-        "name": "Smpl_Test_Script_2_Phil.wav"
-    },
-    {
-        "name": "Smpl_Test_Script_3_Phil.wav"
-    },
-    {
         "name": "Smpl_Test_Script_4_Phil.wav"
-    }
+    },
+    {
+        "name": "reverberant_mandarin.wav"
+    },
+    {
+        "name": "reverberant_md_mf.wav"
+    }    
 ]
