@@ -1,4 +1,5 @@
 // set up for downlink playback (fetch/load wav file from webserver, play locally over loudspeaker)
+console.clear();
 
 let dropdownFar = document.getElementById('far-filename-dropdown');
 dropdownFar.length = 0;
@@ -44,6 +45,8 @@ fetch(url)
 const loadFarButton = document.querySelector('.load');
 const playFarButton = document.querySelector('.play');
 const stopFarButton = document.querySelector('.stop-far');
+// for cross browser -- see https://codepen.io/Rumyra/pen/qyMzqN/
+const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtxDownlink = new AudioContext();
 let buffer = null;
 
@@ -136,7 +139,7 @@ var rec; 							//Recorder.js object
 var input; 							//MediaStreamAudioSourceNode we'll be recording
 
 // shim for AudioContext when it's not avb. 
-var AudioContext = window.AudioContext || window.webkitAudioContext;
+//var AudioContext = window.AudioContext || window.webkitAudioContext;
 var audioContext //audio context to help us record
 
 //var recordButton = document.getElementById("recordButton");
