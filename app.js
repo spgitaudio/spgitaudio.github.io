@@ -1,6 +1,21 @@
 // set up for downlink playback (fetch/load wav file from webserver, play locally over loudspeaker)
 console.clear();
 
+navigator.mediaDevices.getUserMedia({
+  audio: {
+    autoGainControl: false,
+    channelCount: 2,
+    echoCancellation: false,
+    latency: 0,
+    noiseSuppression: false,
+    sampleRate: 48000,
+    sampleSize: 16,
+    volume: 1.0
+  }
+});
+
+////////////////////////////
+				
 let dropdownFar = document.getElementById('far-filename-dropdown');
 dropdownFar.length = 0;
 
