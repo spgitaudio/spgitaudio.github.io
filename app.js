@@ -9,11 +9,75 @@ const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
 for (const constraint in supportedConstraints) {
   if (Object.hasOwn(supportedConstraints, constraint)) {
     const elem = document.createElement("li");
-
-    elem.innerHTML = `<code><a href='https://developer.mozilla.org/docs/Web/API/MediaTrackSupportedConstraints/${constraint}' target='_blank'>${constraint}</a></code>`;
+	elem.innerHTML = `<code>${constraint}</code>`;
     supportedConstraintList.appendChild(elem);
   }
 }
+const audioDefaultConstraintString =
+  '{\n  "sampleSize": 16,\n  "channelCount": 2,\n  "echoCancellation": false\n}';
+
+let audioConstraints = null;
+
+let audioTrack = null;
+
+const logElement = document.getElementById("log");
+const audioConstraintEditor = document.getElementById("audioConstraintEditor");
+const audioSettingsText = document.getElementById("audioSettingsText");
+
+audioConstraintEditor.value = audioDefaultConstraintString;
+
+function getCurrentSettings() {
+  if (audioTrack) {
+    audioSettingsText.value = JSON.stringify(audioTrack.getSettings(), null, 2);
+  }
+}
+
+const constraints = {
+  audio: true,
+  video: false
+};
+
+function handleSuccess(stream) {
+  const audioTracks = stream.getAudioTracks();
+  console.log('Got stream with constraints:', constraints);
+  if (audioTracks.length > 0) {
+	  audioTrack = audioTracks[0];
+	  console.log('Using audio device: ' + audioTracks[0].label);
+  }	
+  getCurrentSettings();
+}
+
+function handleError(error) {
+  const errorMessage = 'navigator.MediaDevices.getUserMedia error: ' + error.message + ' ' + error.name;
+  console.log(errorMessage);
+}
+
+function buildConstraints() {
+  try {
+    audioConstraints = JSON.parse(audioConstraintEditor.value);
+	console.log("got audioConstraints"); 
+	
+	navigator.mediaDevices
+		.getUserMedia(constraints)
+		.then(handleSuccess)
+		.catch(handleError);
+	
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+function log(msg) {
+  logElement.innerHTML += `${msg}<br>`;
+}
+
+function handleError(reason) {
+  log(
+    `Error <code>${reason.name}</code> in constraint <code>${reason.constraint}</code>: ${reason.message}`
+  );
+}
+
+buildConstraints();
 
 
 //xxxx
