@@ -13,33 +13,27 @@ for (const constraint in supportedConstraints) {
     supportedConstraintList.appendChild(elem);
   }
 }
-const preferredAudioConstraints =
-  '{\n  "sampleSize": 16,\n  "channelCount": 2,\n  "sampleRate": 48000,\n  "echoCancellation": false,\n  "autoGainControl": false,\n  "noiseSuppression": false}';
+const audioDefaultConstraintString =
+  '{\n  "sampleSize": 16,\n  "channelCount": 2,\n  "echoCancellation": false\n}';
 
 let audioConstraints = null;
 
 let audioTrack = null;
 
 const logElement = document.getElementById("log");
-const initialDefaultAudioConstraints = document.getElementById("initialDefaultAudioConstraints");
+const audioConstraintEditor = document.getElementById("audioConstraintEditor");
 const audioSettingsText = document.getElementById("audioSettingsText");
 
-//audioConstraintEditor.value = audioDefaultConstraintString;
+audioConstraintEditor.value = audioDefaultConstraintString;
 
 function getCurrentSettings() {
-  console.log('getCurrentSettings');
   if (audioTrack) {
-    initialDefaultAudioConstraints.value = JSON.stringify(audioTrack.getSettings(), null, 2);
+    audioSettingsText.value = JSON.stringify(audioTrack.getSettings(), null, 2);
   }
 }
 
 const constraints = {
   audio: true,
-  video: false
-};
-
-const constraintsPreferred = {
-  audio: {sampleSize: 16, channelCount: 2, sampleRate: 48000,  echoCancellation: false, autoGainControl: false, noiseSuppression: false},
   video: false
 };
 
@@ -56,35 +50,17 @@ function handleSuccess(stream) {
 function handleError(error) {
   const errorMessage = 'navigator.MediaDevices.getUserMedia error: ' + error.message + ' ' + error.name;
   console.log(errorMessage);
-  log(errorMessage);
 }
 
 function buildConstraints() {
   try {
-	  
-    // audioConstraints = JSON.parse(initialDefaultAudioConstraints.value);
-	console.log("in buildConstraints"); 
+    audioConstraints = JSON.parse(audioConstraintEditor.value);
+	console.log("got audioConstraints"); 
 	
 	navigator.mediaDevices
 		.getUserMedia(constraints)
 		.then(handleSuccess)
 		.catch(handleError);
-		
-	navigator.mediaDevices
-	.getUserMedia(constraintsPreferred)
-    .then((stream) => {
-      const audioTracks = stream.getAudioTracks();
-
-      if (audioTracks.length > 0) {
-        audioTrack = audioTracks[0];
-      }
-    })
-    .then(() => {
-	  if (audioTrack) {
-		audioSettingsText.value = JSON.stringify(audioTrack.getSettings(), null, 2);
-	  }
-    })
-    .catch(handleError);	
 	
   } catch (error) {
     handleError(error);
@@ -95,6 +71,11 @@ function log(msg) {
   logElement.innerHTML += `${msg}<br>`;
 }
 
+function handleError(reason) {
+  log(
+    `Error <code>${reason.name}</code> in constraint <code>${reason.constraint}</code>: ${reason.message}`
+  );
+}
 
 buildConstraints();
 
