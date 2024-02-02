@@ -3,9 +3,7 @@ console.clear();
 
 
 
-// see https://live-samples.mdn.mozilla.net/en-US/docs/Web/API/Media_Capture_and_Streams_API/Constraints/_sample_.Example_Constraint_exerciser.html
-// for example on how to exercise constraints
-// Discover which constraints are supported by the browser. Different browsers (eg Firefox vs Chrome vs Edge) support different constraints
+//xxxx
 const supportedConstraintList = document.getElementById("supportedConstraints");
 const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
 for (const constraint in supportedConstraints) {
@@ -15,15 +13,18 @@ for (const constraint in supportedConstraints) {
     supportedConstraintList.appendChild(elem);
   }
 }
-
+const preferredAudioConstraints =
+  '{\n  "sampleSize": 16,\n  "channelCount": 2,\n  "sampleRate": 48000,\n  "echoCancellation": false,\n  "autoGainControl": false,\n  "noiseSuppression": false}';
 
 let audioConstraints = null;
+
 let audioTrack = null;
 
 const logElement = document.getElementById("log");
 const initialDefaultAudioConstraints = document.getElementById("initialDefaultAudioConstraints");
 const audioSettingsText = document.getElementById("audioSettingsText");
 
+//audioConstraintEditor.value = audioDefaultConstraintString;
 
 function getCurrentSettings() {
   console.log('getCurrentSettings');
@@ -32,15 +33,13 @@ function getCurrentSettings() {
   }
 }
 
-// initially, just get audio constraints and keep video off
 const constraints = {
   audio: true,
   video: false
 };
 
-// Ideally, we prefer the following audio constraints (but they are not guaranteed because a browser might not support it)
 const constraintsPreferred = {
-  audio: {sampleSize: 16, channelCount: 2, sampleRate: 48000,  echoCancellation: false, autoGainControl: false, noiseSuppression: false, suppressLocalAudioPlayback: false},
+  audio: {sampleSize: 16, channelCount: 2, sampleRate: 48000,  echoCancellation: false, autoGainControl: false, noiseSuppression: false},
   video: false
 };
 
@@ -66,13 +65,11 @@ function buildConstraints() {
     // audioConstraints = JSON.parse(initialDefaultAudioConstraints.value);
 	console.log("in buildConstraints"); 
 	
-	// get the initial (default) constraints
 	navigator.mediaDevices
 		.getUserMedia(constraints)
 		.then(handleSuccess)
 		.catch(handleError);
-	
-	// now try to assign the preferred audio settings
+		
 	navigator.mediaDevices
 	.getUserMedia(constraintsPreferred)
     .then((stream) => {
