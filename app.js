@@ -1,22 +1,18 @@
 // set up for downlink playback (fetch/load wav file from webserver, play locally over loudspeaker)
 console.clear();
 
-
-
-//xxxx
-const supportedConstraintList = document.getElementById("supportedConstraints");
-const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
-for (const constraint in supportedConstraints) {
-  if (Object.hasOwn(supportedConstraints, constraint)) {
-    const elem = document.createElement("li");
-
-    elem.innerHTML = `<code><a href='https://developer.mozilla.org/docs/Web/API/MediaTrackSupportedConstraints/${constraint}' target='_blank'>${constraint}</a></code>`;
-    supportedConstraintList.appendChild(elem);
+navigator.mediaDevices.getUserMedia({
+  audio: {
+    autoGainControl: false,
+    channelCount: 2,
+    echoCancellation: false,
+    latency: 0,
+    noiseSuppression: false,
+    sampleRate: 48000,
+    sampleSize: 16,
+    volume: 1.0
   }
-}
-
-
-//xxxx
+});
 
 ////////////////////////////
 				
